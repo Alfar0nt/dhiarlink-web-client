@@ -22,7 +22,7 @@ export const ManageServersRow: FC<ManageServersRowProps> = ({ server, hasAutoCon
             <>
               <FontAwesomeIcon
                 icon={checkIcon}
-                className="text-lm-brand dark:text-dm-brand"
+                className="text-dh-accent"
                 {...anchor}
                 data-testid="auto-connect"
               />

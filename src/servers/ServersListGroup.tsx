@@ -16,8 +16,8 @@ const ServerListItem = ({ id, name }: { id: string; name: string }) => (
     className={clsx(
       'servers-list__server-item',
       'flex items-center justify-between gap-x-2 px-4 py-3',
-      'rounded-none hover:bg-lm-secondary hover:dark:bg-dm-secondary',
-      'border-b last:border-0 border-lm-border dark:border-dm-border',
+      'rounded-none hover:bg-dh-accent/10',
+      'border-b last:border-0 border-dh-border',
     )}
   >
     <span className="truncate">{name}</span>
@@ -30,7 +30,7 @@ export const ServersListGroup: FC<ServersListGroupProps> = ({ servers, borderles
     <div
       data-testid="list"
       className={clsx(
-        'w-full border-lm-border dark:border-dm-border',
+        'w-full border-dh-border',
         'md:max-h-56 md:overflow-y-auto -mb-1 scroll-thin',
         { 'border-y': !borderless },
       )}

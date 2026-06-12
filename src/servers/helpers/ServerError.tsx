@@ -16,17 +16,17 @@ export const ServerError: FC = () => {
     <NoMenuLayout>
       <div className="flex flex-col items-center gap-y-4 md:gap-y-8">
         <Message className="w-full lg:w-[80%]" variant="error">
-          {!isServerWithId(selectedServer) && 'Could not find this Shlink server.'}
+          {!isServerWithId(selectedServer) && 'Could not find this Dhiarlink server.'}
           {isServerWithId(selectedServer) && (
             <>
-              <p>Oops! Could not connect to this Shlink server.</p>
+              <p>Oops! Could not connect to this Dhiarlink server.</p>
               Make sure you have internet connection, and the server is properly configured and on-line.
             </>
           )}
         </Message>
 
         <p className="text-xl">
-          These are the Shlink servers currently configured. Choose one of
+          These are the Dhiarlink servers currently configured. Choose one of
           them or <Link to="/server/create">add a new one</Link>.
         </p>
         <Card className="w-full max-w-100 overflow-hidden">

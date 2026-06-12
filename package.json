@@ -1,9 +1,9 @@
 {
-  "name": "shlink-web-client",
-  "description": "A React-based progressive web application for shlink",
+  "name": "dhiarlink-web-client",
+  "description": "A React-based progressive web application for Dhiarlink URL shortener",
   "private": false,
   "homepage": "",
-  "repository": "https://github.com/shlinkio/shlink-web-client",
+  "repository": "https://github.com/dhiarlink/dhiarlink-web-client",
   "license": "MIT",
   "type": "module",
   "scripts": {

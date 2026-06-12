@@ -7,7 +7,7 @@ import { initReducers } from './reducers';
 
 const localStorageConfig: RLSOptions = {
   states: ['settings', 'servers'],
-  namespace: 'shlink',
+  namespace: 'dhiarlink',
   namespaceSeparator: '.',
   debounce: 300,
 };

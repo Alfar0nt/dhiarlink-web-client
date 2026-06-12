@@ -1,13 +1,14 @@
-import { BRAND_COLOR_LM } from '@shlinkio/shlink-frontend-kit';
 import type { ManifestOptions } from 'vite-plugin-pwa';
 
+const BRAND_COLOR = '#0f1419';
+
 export const manifest: Partial<ManifestOptions> = {
-  short_name: 'Shlink',
-  name: 'Shlink Web Client',
+  short_name: 'Dhiarlink',
+  name: 'Dhiarlink Web Client',
   start_url: '/',
   display: 'standalone',
-  theme_color: BRAND_COLOR_LM, // Toolbar color
-  background_color: BRAND_COLOR_LM, // Splash screen background color
+  theme_color: BRAND_COLOR, // Toolbar color
+  background_color: BRAND_COLOR, // Splash screen background color
   icons: [
     {
       src: './icons/icon-16x16.png',

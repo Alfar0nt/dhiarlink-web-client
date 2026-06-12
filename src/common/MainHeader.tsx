@@ -4,7 +4,7 @@ import { NavBar } from '@shlinkio/shlink-frontend-kit';
 import type { FC } from 'react';
 import { Link, useLocation } from 'react-router';
 import { ServersDropdown } from '../servers/ServersDropdown';
-import { ShlinkLogo } from './img/ShlinkLogo';
+import { DhiarlinkLogo } from './img/DhiarlinkLogo';
 
 export const MainHeader: FC = () => {
   const { pathname } = useLocation();
@@ -15,8 +15,8 @@ export const MainHeader: FC = () => {
     <NavBar
       className="[&]:fixed top-0 z-900"
       brand={(
-        <Link to="/" className="[&]:text-white no-underline flex items-center gap-2">
-          <ShlinkLogo className="w-7" color="white" /> <small className="font-normal">Shlink</small>
+        <Link to="/" className="[&]:text-dh-text no-underline flex items-center gap-2">
+          <DhiarlinkLogo className="w-7" color="#4a9a8e" /> <small className="font-normal tracking-wide">Dhiarlink</small>
         </Link>
       )}
     >

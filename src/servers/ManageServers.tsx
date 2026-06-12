@@ -1,7 +1,7 @@
 import { faFileDownload as exportIcon, faPlus as plusIcon } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { TimeoutToggle } from '@shlinkio/shlink-frontend-kit';
-import { Button, Result, SearchInput, SimpleCard, Table } from '@shlinkio/shlink-frontend-kit';
+import { Button, Result, SearchInput, Table } from '@shlinkio/shlink-frontend-kit';
 import type { FC } from 'react';
 import { useMemo, useState } from 'react';
 import { NoMenuLayout } from '../common/NoMenuLayout';
@@ -52,7 +52,7 @@ const ManageServersBase: FC<ManageServersProps> = withoutSelectedServer(({
         </Button>
       </div>
 
-      <SimpleCard className="card">
+      <div className="rounded-xl border border-dh-border bg-dh-card shadow-lg shadow-black/30 overflow-hidden">
         <Table header={(
           <Table.Row>
             {hasAutoConnect && (
@@ -70,7 +70,7 @@ const ManageServersBase: FC<ManageServersProps> = withoutSelectedServer(({
             <ManageServersRow key={server.id} server={server} hasAutoConnect={hasAutoConnect} />
           ))}
         </Table>
-      </SimpleCard>
+      </div>
 
       {errorImporting && (
         <div>

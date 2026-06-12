@@ -33,7 +33,7 @@ export class ErrorHandler extends Component<ErrorHandlerProps, ErrorHandlerState
 
     if (hasError) {
       return (
-        <ErrorLayout title="Oops! This is awkward :S">
+        <ErrorLayout title="> Error: Something went wrong">
           <p>It seems that something went wrong. Try refreshing the page or just click this button.</p>
           <br />
           <Button size="lg" onClick={() => location.reload()}>Take me back</Button>

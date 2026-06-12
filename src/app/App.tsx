@@ -1,4 +1,4 @@
-import { changeThemeInMarkup, getSystemPreferredTheme } from '@shlinkio/shlink-frontend-kit';
+import { changeThemeInMarkup } from '@shlinkio/shlink-frontend-kit';
 import { clsx } from 'clsx';
 import type { FC } from 'react';
 import { useEffect } from 'react';
@@ -13,7 +13,6 @@ import { CreateServer } from '../servers/CreateServer';
 import { EditServer } from '../servers/EditServer';
 import { ManageServers } from '../servers/ManageServers';
 import { useLoadRemoteServers } from '../servers/reducers/remoteServers';
-import { useSettings } from '../settings/reducers/settings';
 import { Settings } from '../settings/Settings';
 import { forceUpdate } from '../utils/helpers/sw';
 import { useAppUpdated } from './reducers/appUpdates';
@@ -26,13 +25,13 @@ export const App: FC = () => {
   const location = useLocation();
   const isHome = location.pathname === '/';
 
-  const { settings } = useSettings();
   useEffect(() => {
-    changeThemeInMarkup(settings.ui?.theme ?? getSystemPreferredTheme());
-  }, [settings.ui?.theme]);
+    // Always force dark theme regardless of user preference
+    changeThemeInMarkup('dark');
+  }, []);
 
   return (
-    <div className="h-full">
+    <div className="h-full bg-dh-bg min-h-screen">
       <>
         <MainHeader />
 
