@@ -1,123 +1,473 @@
-# shlink-web-client
+# Dhiarlink Web Client
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/shlinkio/shlink-web-client/ci.yml?branch=develop&logo=github&style=flat-square)](https://github.com/shlinkio/shlink-web-client/actions/workflows/ci.yml?query=workflow%3A%22Continuous+integration%22)
-[![Code Coverage](https://img.shields.io/codecov/c/gh/shlinkio/shlink-web-client/develop?style=flat-square)](https://app.codecov.io/gh/shlinkio/shlink-web-client)
-[![GitHub release](https://img.shields.io/github/release/shlinkio/shlink-web-client.svg?style=flat-square)](https://github.com/shlinkio/shlink-web-client/releases/latest)
-[![Docker pulls](https://img.shields.io/docker/pulls/shlinkio/shlink-web-client.svg?logo=docker&style=flat-square)](https://hub.docker.com/r/shlinkio/shlink-web-client/)
-[![GitHub license](https://img.shields.io/github/license/shlinkio/shlink-web-client.svg?style=flat-square)](https://github.com/shlinkio/shlink-web-client/blob/main/LICENSE)
+A React-based Progressive Web Application (PWA) dashboard for managing [Dhiarlink](https://github.com/dhiarlink/dhiarlink) — a self-hosted URL shortener. Built with a **Terminal / Hacker aesthetic** and deployed at **app.dhiarr.qzz.io**.
 
-[![Mastodon](https://img.shields.io/mastodon/follow/109329425426175098?color=%236364ff&domain=https%3A%2F%2Ffosstodon.org&label=follow&logo=mastodon&logoColor=white&style=flat-square)](https://fosstodon.org/@shlinkio)
-[![Bluesky](https://img.shields.io/badge/follow-shlinkio-0285FF.svg?style=flat-square&logo=bluesky&logoColor=white)](https://bsky.app/profile/shlink.io)
-[![Paypal Donate](https://img.shields.io/badge/Donate-paypal-blue.svg?style=flat-square&logo=paypal&colorA=cccccc)](https://slnk.to/donate)
+> This is a rebranded and restyled fork of [shlink-web-client](https://github.com/shlinkio/shlink-web-client), customized for the Dhiarlink URL shortener platform.
 
-A ReactJS-based progressive web application for [Shlink](https://shlink.io).
+---
 
-![shlink-web-client](shlink-web-client.gif)
+## Table of Contents
 
-> If you are trying to find out how to run the project in development mode or how to provide contributions, read the [CONTRIBUTING](CONTRIBUTING.md) doc.
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [Design System](#design-system)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Local Development](#local-development)
+  - [Connecting to a Dhiarlink Backend](#connecting-to-a-dhiarlink-backend)
+- [Production Build](#production-build)
+  - [Static Files](#static-files)
+  - [Docker Image](#docker-image)
+- [Deployment with Cloudflare Tunnel](#deployment-with-cloudflare-tunnel)
+- [Pre-configuring Servers](#pre-configuring-servers)
+  - [Via Environment Variables](#via-environment-variables)
+  - [Via servers.json](#via-serversjson)
+- [Environment Variables Reference](#environment-variables-reference)
+- [Available Scripts](#available-scripts)
+- [Project Structure](#project-structure)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [Credits](#credits)
+- [License](#license)
 
-## Installation
+---
 
-There are three ways in which you can use this application.
+## Features
 
-### From app.shlink.io
+- **Create & manage short URLs** — generate short links, set custom slugs, expiration dates, tags, and metadata
+- **Visit analytics** — track clicks, referrers, browsers, devices, and geolocation with real-time updates (via Mercure SSE)
+- **Multi-server support** — connect to and switch between multiple Dhiarlink instances from a single dashboard
+- **Import / export servers** — transfer your server configuration between browsers or devices
+- **Progressive Web App** — installable, works offline after first load, with service worker caching
+- **Fully responsive** — optimized for both desktop and mobile with touch-friendly targets
+- **Dark-only terminal UI** — Deep Ocean color palette with monospace typography
 
-The easiest way to use shlink-web-client is by just going to <https://app.shlink.io>.
+---
 
-The application runs 100% in the browser, so you can safely access any shlink instance from there.
+## Tech Stack
 
-### Docker image
+| Layer | Technology | Version |
+|-------|-----------|---------|
+| **Framework** | React | 19.x |
+| **Language** | TypeScript | 5.9.x |
+| **Build Tool** | Vite | 8.x |
+| **CSS** | Tailwind CSS v4 | 4.x |
+| **State Management** | Redux Toolkit | 2.x |
+| **Routing** | React Router | 7.x |
+| **PWA / Service Worker** | Workbox + vite-plugin-pwa | 7.x / 1.3.x |
+| **UI Components** | @shlinkio/shlink-frontend-kit | 1.4.x |
+| **Dashboard Widget** | @shlinkio/shlink-web-component | 0.18.x |
+| **API Client** | @shlinkio/shlink-js-sdk | 3.1.x |
+| **Icons** | Font Awesome | 7.x |
+| **Testing** | Vitest + Testing Library + Playwright | 4.x |
+| **Linting** | ESLint | 9.x |
+| **Containerization** | Docker + nginx | Alpine-based |
+| **Deployment** | Cloudflare Tunnel | — |
 
-If you want to deploy shlink-web-client in a container-based cluster (kubernetes, docker swarm, etc), just pick the [shlinkio/shlink-web-client](https://hub.docker.com/r/shlinkio/shlink-web-client/) image and do it.
+---
 
-It's a lightweight [nginx:alpine](https://hub.docker.com/r/library/nginx/) image serving the static app on port 8080.
+## Architecture
 
-### Self-hosted
+```
+┌──────────────────────────────────────────────────────────────┐
+│                        DNS / Tunnel                           │
+│                                                               │
+│  dhiarr.qzz.io      → Dhiarlink backend  (PHP REST API)      │
+│  app.dhiarr.qzz.io  → This project       (React SPA)         │
+│  link.dhiarr.qzz.io → Dhiarlink backend  (short redirects)   │
+└──────────────────────────────────────────────────────────────┘
+```
 
-If you want to self-host it yourself, get the [latest release](https://github.com/shlinkio/shlink-web-client/releases/latest) and download the distributable zip file attached to it (`shlink-web-client_X.X.X_dist.zip`).
+The web client is a **static React SPA** served by nginx (or any HTTP server). It connects to the Dhiarlink REST API at `/rest/v3/...` using the standard Shlink JS SDK. There is no server-side rendering — just static HTML, CSS, and JS.
 
-The package contains static files only, so just put it in a folder and serve it with the web server of your choice.
+Key communication paths:
+- **REST API** — all CRUD operations on short URLs, tags, visits, domains, etc.
+- **Mercure SSE** — real-time push notifications for new visits (when enabled in backend)
 
-**Considerations**:
+---
 
-* Provided dist files are configured to be served from the root of your domain. If you need to serve shlink-web-client from a subpath, you will have to build it yourself following [these steps](#serve-shlink-in-subpath).
-* The app has a client-side router that handles dynamic paths. Because of that, you need to configure your web server to fall-back to the `index.html` file when requested files do not exist.
-    * If you use Apache, you are covered, since the project includes an `.htaccess` file which already does this.
-    * If you use nginx, you can [see how it's done](config/docker/nginx.conf) for the docker image and do the same.
+## Design System
 
-## Pre-configuring servers
+**Theme:** Terminal / Hacker Aesthetic — Deep Ocean Palette
 
-The first time you access shlink-web-client from a browser, you will have to configure the list of shlink servers you want to manage, and they will be saved in the local storage.
+| Token | Value | Usage |
+|-------|-------|-------|
+| Background | `#0f1419` | Page / root background |
+| Card Surface | `#192028` | Cards, panels, modals |
+| Accent | `#4a9a8e` | Links, active states, brand color |
+| Accent Hover | `#5cc4b3` | Hover/focus on accent elements |
+| Text Primary | `#a8b2c1` | Body text, headings |
+| Text Muted | `#6b7a8d` | Secondary text, labels |
+| Success | `#4ade80` | Confirmations, green states |
+| Error | `#f87171` | Errors, danger states |
+| Border | `#2a3440` | Borders, dividers |
+| Input Background | `#131a21` | Form input backgrounds |
 
-Those servers can be exported and imported in other browsers, but if for some reason you need some servers to be there from the beginning, starting with shlink-web-client 2.1.0, you can provide a `servers.json` file in the project root folder (the same containing the `index.html`, `favicon.ico`, etc) with a structure like this:
+**Typography:** `'JetBrains Mono'`, `'Fira Code'`, `'SF Mono'`, monospace
+
+The app is **dark-mode only**. The upstream shlink-frontend-kit theme tokens are overridden via Tailwind CSS v4's `@theme` directive to match the Deep Ocean palette.
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| Node.js | >= 22.x | JavaScript runtime |
+| npm | >= 10.x | Package manager |
+| Git | >= 2.x | Version control |
+| Docker | >= 24.x | Container runtime *(for production)* |
+
+For production deployment:
+- A Cloudflare account (free tier works)
+- `cloudflared` CLI installed on your server
+- A running Dhiarlink backend instance
+
+### Local Development
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/dhiarlink/dhiarlink-web-client.git
+cd dhiarlink-web-client
+
+# 2. Install dependencies
+npm install
+
+# 3. Start the dev server
+npm start
+```
+
+The Vite dev server starts on **http://localhost:3000** with hot module replacement. It binds to `0.0.0.0`, so it's also accessible on your LAN for mobile testing.
+
+### Connecting to a Dhiarlink Backend
+
+Once the dashboard opens, you'll need to add a server:
+
+1. Click **"Add a server"**
+2. Fill in the details:
+   - **Name:** `Dhiarlink (local)`
+   - **URL:** `http://localhost:8000` (local backend) or `https://dhiarr.qzz.io` (production)
+   - **API key:** Generate one from the backend via `bin/cli api-key:generate`
+
+Alternatively, create a `public/servers.json` file for pre-configuration (see [Pre-configuring Servers](#via-serversjson) below).
+
+---
+
+## Production Build
+
+### Static Files
+
+```bash
+npm run build
+```
+
+Outputs optimized static files to `build/`:
+
+```
+build/
+├── index.html
+├── manifest.json
+├── service-worker.js
+├── assets/
+│   ├── index-*.css     (~60 KB)
+│   └── index-*.js      (~1.4 MB)
+├── icons/
+│   └── icon-*.png
+└── favicon.*
+```
+
+Serve these files with any static HTTP server — nginx, Caddy, Apache, etc.
+
+**Important:** The app uses client-side routing. Your web server must fall back to `index.html` for non-existent paths. See the [nginx config](config/docker/nginx.conf) for an example.
+
+### Docker Image
+
+```bash
+# Build
+docker build -t dhiarlink-web-client .
+
+# Run
+docker run -d \
+  --name dhiarlink_web_client \
+  -p 8080:8080 \
+  dhiarlink-web-client
+```
+
+The container runs **nginx on port 8080** as a non-root user (UID 101).
+
+With pre-configured server:
+
+```bash
+docker run -d \
+  --name dhiarlink_web_client \
+  -p 8080:8080 \
+  -e DHIARLINK_SERVER_URL=https://dhiarr.qzz.io \
+  -e DHIARLINK_SERVER_API_KEY=your-api-key \
+  -e DHIARLINK_SERVER_NAME="Dhiarlink" \
+  dhiarlink-web-client
+```
+
+Or using Docker Compose:
+
+```bash
+docker compose up -d
+```
+
+---
+
+## Deployment with Cloudflare Tunnel
+
+This is the recommended approach for deploying to `app.dhiarr.qzz.io`.
+
+**Step 1: Authenticate cloudflared**
+
+```bash
+cloudflared tunnel login
+```
+
+**Step 2: Create a tunnel**
+
+```bash
+cloudflared tunnel create dhiarlink-web-client
+```
+
+**Step 3: Configure ingress** (`~/.cloudflared/config.yml`)
+
+```yaml
+tunnel: <TUNNEL_ID>
+credentials-file: /home/<user>/.cloudflared/<TUNNEL_ID>.json
+
+ingress:
+  - hostname: app.dhiarr.qzz.io
+    service: http://localhost:8080
+    originRequest:
+      noTLSVerify: true
+  - hostname: dhiarr.qzz.io
+    service: http://localhost:8000
+  - hostname: link.dhiarr.qzz.io
+    service: http://localhost:8000
+  - service: http_status:404
+```
+
+**Step 4: Create DNS records**
+
+```bash
+cloudflared tunnel route dns dhiarlink-web-client app.dhiarr.qzz.io
+cloudflared tunnel route dns dhiarlink-web-client dhiarr.qzz.io
+cloudflared tunnel route dns dhiarlink-web-client link.dhiarr.qzz.io
+```
+
+**Step 5: Run the tunnel**
+
+```bash
+cloudflared tunnel run dhiarlink-web-client
+
+# Or install as a systemd service for auto-start:
+sudo cloudflared service install
+sudo systemctl enable --now cloudflared
+```
+
+Alternatively, you can manage tunnels via the **Cloudflare Zero Trust Dashboard** (GUI) instead of CLI.
+
+---
+
+## Pre-configuring Servers
+
+### Via Environment Variables
+
+When running in Docker, you can pre-configure a server using environment variables:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DHIARLINK_SERVER_URL` | Base URL of the Dhiarlink API | — |
+| `DHIARLINK_SERVER_API_KEY` | API key for authentication | — |
+| `DHIARLINK_SERVER_NAME` | Display name in the dashboard | `Dhiarlink` |
+| `DHIARLINK_SERVER_FORWARD_CREDENTIALS` | Forward browser credentials (cookies, etc.) | `false` |
+
+> Legacy `SHLINK_*` variables are also supported for backward compatibility.
+
+### Via servers.json
+
+Place a `servers.json` file in the project root (same folder as `index.html`):
 
 ```json
 [
   {
-    "name": "Main server",
-    "url": "https://s.test",
-    "apiKey": "09c972b7-506b-49f1-a19a-d729e22e599c"
-  },
-  {
-    "name": "Local",
-    "url": "http://localhost:8080",
-    "apiKey": "580d0b42-4dea-419a-96bf-6c876b901451"
+    "name": "Dhiarlink Production",
+    "url": "https://dhiarr.qzz.io",
+    "apiKey": "your-api-key-here",
+    "autoConnect": true
   }
 ]
 ```
 
-> The list can contain as many servers as you need.
+For Docker, mount it as a volume:
 
-If you are using the shlink-web-client docker image, you can mount the `servers.json` file in a volume inside `/usr/share/nginx/html`, which is the app's document root inside the container.
+```bash
+docker run -d -p 8080:8080 \
+  -v ./servers.json:/usr/share/nginx/html/servers.json:ro \
+  dhiarlink-web-client
+```
 
-    docker run --name shlink-web-client -p 8000:8080 -v ${PWD}/servers.json:/usr/share/nginx/html/servers.json shlinkio/shlink-web-client
-    
-Alternatively, you can mount a `conf.d` directory, which in turn contains the `servers.json` file, in a volume inside `/usr/share/nginx/html`. *(since shlink-web-client 3.2.0)*.
+> **Security notice:** Since this is a client-side app, `servers.json` (including API keys) is accessible from the browser. Only use pre-configuration in trusted/self-hosted environments.
 
-    docker run --name shlink-web-client -p 8000:8080 -v ${PWD}/my-config/:/usr/share/nginx/html/conf.d/ shlinkio/shlink-web-client
-    
-If you want to pre-configure a single server, you can provide its config via env vars. When the container starts up, it will build the `servers.json` file dynamically based on them. *(since shlink-web-client 3.2.0)*.
+---
 
-  * `SHLINK_SERVER_URL`: The fully qualified URL for the Shlink server.
-  * `SHLINK_SERVER_API_KEY`: The API key.
-  * `SHLINK_SERVER_NAME`: The name to be displayed. Defaults to **Shlink** if not provided.
+## Environment Variables Reference
 
-    ```shell
-    docker run \
-        --name shlink-web-client \
-        -p 8000:8080 \
-        -e SHLINK_SERVER_URL=https://s.test \
-        -e SHLINK_SERVER_API_KEY=6aeb82c6-e275-4538-a747-31f9abfba63c \
-        shlinkio/shlink-web-client
-    ```
+### Web Client (this project)
 
-> **Be extremely careful when using this feature.**
->
-> Due to shlink-web-client's client-side nature, the file needs to be accessible from the browser.
->
-> Because of that, make sure you use this only when you self-host shlink-web-client, and you know only trusted people will have access to it.
->
-> Failing to do this could cause your API keys to end up being exposed.
+| Variable | Context | Default | Description |
+|----------|---------|---------|-------------|
+| `NODE_ENV` | Build | `development` | `production` for optimized builds |
+| `DHIARLINK_SERVER_URL` | Docker runtime | — | Pre-configured server URL |
+| `DHIARLINK_SERVER_API_KEY` | Docker runtime | — | Pre-configured API key |
+| `DHIARLINK_SERVER_NAME` | Docker runtime | `Dhiarlink` | Pre-configured display name |
 
-## Serve project in subpath
+### Backend (Dhiarlink)
 
-Official distributable files have been built so that they are served from the root of a domain.
+The Dhiarlink backend (at `../dhiarlink` or `dhiarr.qzz.io`) has its own configuration. Key variables:
 
-If you need to host shlink-web-client yourself and serve it from a subpath, follow these steps:
+| Variable | Description |
+|----------|-------------|
+| `DEFAULT_DOMAIN` | Domain for generated short URLs (e.g., `link.dhiarr.qzz.io`) |
+| `IS_HTTPS_ENABLED` | Generate `https://` links |
+| `DB_DRIVER` | Database driver (`mysql`, `postgres`, etc.) |
+| `REDIS_SERVERS` | Redis connection for caching/real-time |
+| `MERCURE_ENABLED` | Enable real-time visit updates via SSE |
+| `MERCURE_PUBLIC_HUB_URL` | Public Mercure URL for the web client |
+| `CORS_ALLOW_ORIGIN` | Allowed CORS origins (default `*`) |
 
-* Download shlink-web-client source code for the version you want to build.
-    * For example, if you want to build `v1.0.1`, use this link https://github.com/shlinkio/shlink-web-client/archive/v1.0.1.zip
-    * Replace the `v1.0.1` part in the link with the one of the version you want to build.
-* Decompress the file and `cd` into the resulting folder.
-* Open the `package.json` file in the root of the project, locate the `homepage` property and replace the value (which should be an empty string) by the path from which you want to serve shlink-web-client.
-    * For example: `"homepage": "/my-projects/shlink-web-client",`.
-* Build the project:
-    * For classic hosting:
-        * Download [node](https://nodejs.org/en/download/package-manager/) 10.15 or later.
-        * Install project dependencies by running `npm install`.
-        * Build the project by running `npm run build`.
-        * Once the command finishes, you will have a `build` folder with all the static assets you need to run shlink-web-client. Just place them wherever you want them to be served from.
-    * For docker image:
-        * Download [docker](https://docs.docker.com/install/).
-        * Build the docker image by running `docker build . -t shlink-web-client`.
-        * Once the command finishes, you will have an image with the name `shlink-web-client`.
+---
+
+## Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm start` | Start Vite dev server on port 3000 |
+| `npm run build` | Type-check + production build to `build/` |
+| `npm run preview` | Preview the production build locally |
+| `npm test` | Run the test suite (Vitest) |
+| `npm run lint` | Run ESLint |
+| `npm run lint:fix` | Auto-fix lint issues |
+| `npm run types` | Type-check without building |
+| `npm run build:dist` | Build + create distributable zip |
+
+---
+
+## Project Structure
+
+```
+dhiarlink-web-client/
+├── config/                     # Nginx config, test setup
+│   ├── docker/nginx.conf
+│   └── test/setupTests.ts
+├── public/                     # Static assets (icons, favicons)
+│   └── icons/icon-*.png
+├── scripts/                    # Build & Docker scripts
+│   ├── docker/servers_from_env.sh
+│   ├── create-dist-file.mjs
+│   ├── replace-version.mjs
+│   └── set-homepage.cjs
+├── src/
+│   ├── api/services/           # ShlinkApiClientBuilder
+│   ├── app/                    # App.tsx entry, appUpdates reducer
+│   ├── common/                 # Shared components (Home, Header, NotFound, etc.)
+│   ├── container/              # BottleJS dependency injection
+│   ├── servers/                # Server management (CRUD, import/export)
+│   ├── settings/               # User settings & preferences
+│   ├── store/                  # Redux store configuration
+│   ├── utils/                  # Helpers, hooks, services
+│   ├── index.tsx               # Application entry point
+│   ├── service-worker.ts       # Workbox service worker
+│   └── tailwind.css            # Deep Ocean theme & Tailwind config
+├── test/                       # Mirrors src/ structure for unit tests
+├── Dockerfile                  # Multi-stage build (node → nginx)
+├── docker-compose.yml          # Local development orchestration
+├── manifest.ts                 # PWA manifest configuration
+├── vite.config.ts              # Vite build configuration
+├── tsconfig.json               # TypeScript configuration
+└── package.json                # Dependencies & scripts
+```
+
+---
+
+## Troubleshooting
+
+### "Could not connect to this Dhiarlink server"
+
+1. Verify the backend URL is reachable: `curl https://dhiarr.qzz.io/rest/health`
+2. Check CORS — backend must allow your dashboard origin (or `*`)
+3. Verify the API key: `curl -H "X-Api-Key: your-key" https://dhiarr.qzz.io/rest/v3/short-urls`
+
+### Blank page after deployment
+
+1. Check browser console for errors
+2. Ensure `build/` was properly served by your web server
+3. Verify `index.html` is being served (check Network tab)
+4. Clear browser cache and unregister old service worker
+
+### PWA not updating
+
+1. The `AppUpdateBanner` component detects new versions — click "Restart now"
+2. If stuck: DevTools > Application > Storage > Clear site data
+
+### Build errors
+
+```bash
+# Clear and reinstall dependencies
+rm -rf node_modules package-lock.json
+npm install
+
+# Type-check without building
+npm run types
+
+# Full clean build
+npm run build
+```
+
+### Port conflicts
+
+The dev server uses port 3000. To change it:
+```bash
+PORT=3001 npm start
+```
+
+---
+
+## Contributing
+
+Contributions are welcome. To get started:
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/my-change`
+3. Make your changes and run tests: `npm test`
+4. Commit and push: `git push origin feature/my-change`
+5. Open a pull request
+
+Before submitting, ensure:
+- TypeScript compiles without errors: `npm run types`
+- Linting passes: `npm run lint`
+- Tests pass: `npm test`
+
+---
+
+## Credits
+
+This project is a rebranded fork of [shlink-web-client](https://github.com/shlinkio/shlink-web-client) by [shlinkio](https://shlink.io). The original project is licensed under the MIT License.
+
+The Dhiarlink rebrand includes:
+- Custom Terminal / Hacker aesthetic with the Deep Ocean color palette
+- Rebranded UI text, logos, and metadata
+- Tailwind CSS v4 theme overrides for the upstream component libraries
+- Docker and deployment scripts adapted for Dhiarlink infrastructure
+- Environment variable namespace changed from `SHLINK_*` to `DHIARLINK_*`
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
