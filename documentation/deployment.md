@@ -16,6 +16,7 @@
 - [Production Build](#production-build)
     - [Static Files](#static-files)
     - [Docker Image](#docker-image)
+- [Quick Redeploy (Production)](#quick-redeploy-production)
 - [Production Deployment with Cloudflare Tunnel](#production-deployment-with-cloudflare-tunnel)
     - [Option A: Cloudflared on Your Server](#option-a-cloudflared-on-your-server)
     - [Option B: Cloudflare Tunnel via Dashboard](#option-b-cloudflare-tunnel-via-dashboard)
@@ -178,6 +179,50 @@ docker run -d \
   -e DHIARLINK_SERVER_NAME="Dhiarlink Production" \
   dhiarlink-web-client
 ```
+
+---
+
+## Quick Redeploy (Production)
+
+For day-to-day updates after pushing to GitHub, use the included `deploy.sh` script:
+
+```bash
+git pull && ./deploy.sh
+```
+
+This single command will:
+1. Pull the latest code from GitHub
+2. Load your production config from `.env`
+3. Rebuild the Docker image
+4. Stop and remove the old container
+5. Start a new container on the correct Docker network
+
+### First-Time Setup
+
+```bash
+# 1. Create .env from template
+cp .env.example .env
+
+# 2. Edit with your values (API key, Docker network)
+nano .env
+
+# 3. Deploy
+./deploy.sh
+```
+
+The `.env` file is gitignored, so your API key and network config are never committed.
+
+### `.env` Reference
+
+| Variable | Example | Description |
+|----------|---------|-------------|
+| `DHIARLINK_SERVER_URL` | `https://www.dhiarr.qzz.io` | Backend API URL |
+| `DHIARLINK_SERVER_API_KEY` | *(empty or your key)* | Pre-configures a default server |
+| `DHIARLINK_SERVER_NAME` | `Dhiarlink` | Display name in dashboard |
+| `DHIARLINK_SERVER_FORWARD_CREDENTIALS` | `false` | Forward browser credentials |
+| `DOCKER_NETWORK` | `dhiarlink_dhiarlink_internal` | Network shared with Caddy |
+
+> **Tip:** If `DHIARLINK_SERVER_API_KEY` is empty, visitors must manually add a server via the UI. This is intentional — it avoids exposing API keys in the client-side `servers.json`.
 
 ---
 

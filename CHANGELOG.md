@@ -17,6 +17,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
     * `prompt-history.md` — development conversation log
     * `to-do.md` — rebrand task tracker
 * Screenshots added (`screenshot_1.png`, `screenshot_2.png`, `screenshot_3.png`)
+* `deploy.sh` — one-command production redeploy script (`git pull && ./deploy.sh`)
+* `.env.example` — production config template (server URL, API key, Docker network)
+* `.env` support in deploy script — auto-loads config from file, gitignored for security
+* `.gitignore` — added `.env` to prevent committing secrets
 
 ### Changed
 * Forked from `shlink-web-client` and rebranded to `dhiarlink-web-client`

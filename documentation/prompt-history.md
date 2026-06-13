@@ -196,6 +196,132 @@ Fixed the domain mapping across all documentation files:
 
 ---
 
+## Session 3: Deployment Automation & Operational Tooling
+
+### Prompt 7 — Deployment Configuration Check & Production Tutorial
+
+**User:**
+
+> How do I check what is my current deployment configuration in my LXC for this project, and if I'm running the development only deployment, how do I change to the production deployment, provide a full tutorial and step-by-step guide.
+
+**Assistant Response:**
+
+Provided a full tutorial covering:
+- Diagnostic commands: `docker ps`, `ss -tlnp`, `docker inspect` to identify running containers
+- Dev vs production indicators table (container name, port, Dockerfile, startup command)
+- Step-by-step migration: stop dev (`docker compose down`) → build production image → run production container → update Cloudflare Tunnel port → verify
+
+---
+
+### Prompt 8 — Verify Current Deployment Status
+
+**User:**
+
+> This is the docker container that is running, it seems like I've already running the production deployment no?
+>
+> ```
+> CONTAINER ID   IMAGE                         PORTS                                      NAMES
+> cd182da37e58   dhiarlink:latest              8080/tcp                                   dhiarlink
+> a0a3aa109eb6   dhiarlink-web-client:latest   8080/tcp                                   dhiarlink_dashboard
+> 7e653f40a95a   caddy:2-alpine                0.0.0.0:3000->80/tcp                       dhiarlink_caddy
+> c9ad55e49e35   redis:7.4-alpine              6379/tcp                                   dhiarlink_redis
+> 344c558ba38a   mysql:8.0                     3306/tcp, 33060/tcp                        dhiarlink_db
+> ```
+
+**Key observations:**
+- Already running production (`dhiarlink-web-client:latest` image, nginx on port 8080)
+- `docker compose ps` returned empty — containers started from a parent compose file or `docker run`
+- Caddy reverse proxy routes traffic (host:3000 → Caddy:80 → internal containers)
+- No direct host port binding on dashboard container — Caddy reaches it via Docker internal network
+
+---
+
+### Prompt 9 — Simplified Deployment Command
+
+**User:**
+
+> Is there any simple command to run this project deployment production? Running the command you've provided seems a bit more complicated and too long, like for example if I just push the update to the GitHub repo, I need to run all that command just to apply the update. Is there any more simple command to run after `git pull` to the project?
+
+**Assistant Response:**
+
+Created the following files:
+
+1. **`deploy.sh`** — One-command production redeploy script
+   - Loads config from `.env` file
+   - Builds Docker image, stops/removes old container, starts new one
+   - Supports Docker network attachment for Caddy routing
+   - Usage: `git pull && ./deploy.sh`
+
+2. **`.env.example`** — Production config template
+   - `DHIARLINK_SERVER_URL`, `DHIARLINK_SERVER_API_KEY`, `DHIARLINK_SERVER_NAME`
+   - `DHIARLINK_SERVER_FORWARD_CREDENTIALS`, `DOCKER_NETWORK`
+
+3. **`.gitignore`** — Added `.env` entry to prevent committing secrets
+
+---
+
+### Prompt 10 — Docker Inspect Output & Network Configuration
+
+**User:**
+
+> This is the output of docker inspect command:
+>
+> ```
+> DHIARLINK_SERVER_NAME=Dhiarlink
+> DHIARLINK_SERVER_FORWARD_CREDENTIALS=false
+> DHIARLINK_SERVER_URL=https://www.dhiarr.qzz.io
+> DHIARLINK_SERVER_API_KEY=
+> ...
+> Network: dhiarlink_dhiarlink_internal (IP: 172.18.0.2)
+> ```
+
+**Key findings:**
+- API key is empty (no pre-configured server)
+- Docker network: `dhiarlink_dhiarlink_internal`
+- `DHIARLINK_SERVER_FORWARD_CREDENTIALS=false`
+
+**Assistant Response:**
+
+Updated `.env.example` and `deploy.sh` with actual production values:
+- Set `DOCKER_NETWORK=dhiarlink_dhiarlink_internal`
+- Added `DHIARLINK_SERVER_FORWARD_CREDENTIALS` support to deploy script
+- Fixed bash array syntax issue (removed backslash between array elements)
+
+---
+
+### Prompt 11 — Default Server Behavior
+
+**User:**
+
+> Does this update make the default server already appear on app.dhiarr.qzz.io? Because currently, if other people access the app.dhiarr.qzz.io, there is no single server in there, they need to manually add the server first and provide the API key to connect.
+
+**Key explanation:**
+- `servers_from_env.sh` bails out if `DHIARLINK_SERVER_API_KEY` is empty (`[ -n "$apiKey" ] || return 0`)
+- Empty API key → no `servers.json` generated → no default server shown
+- **This is intentional** — avoids exposing API keys in client-side files for public deployments
+- To add a pre-configured server: generate an API key via `bin/cli api-key:generate`, set it in `.env`, redeploy
+
+---
+
+### Prompt 12 — Update CHANGELOG, Docs, and Prompt History
+
+**User:**
+
+> Okay good, that's exactly what I want, no default preconfigured server appear. Now, update the changelog and the docs folder to include the newest update that you've changed, and also update the prompt-history.
+
+**Assistant Response:**
+
+Updated all documentation to reflect the deployment automation additions:
+
+1. **`CHANGELOG.md`** — Added `deploy.sh`, `.env.example`, `.env` support, `.gitignore` to the `[5.0.0]` Added section
+2. **`documentation/docs.md`** — Added `deploy.sh` and `.env.example` to project structure tree, added new "Deployment Automation" section with `.env` config table and note about empty API key behavior
+3. **`documentation/deployment.md`** — Added "Quick Redeploy (Production)" section with `git pull && ./deploy.sh` workflow, first-time setup, and `.env` reference table
+4. **`documentation/to-do.md`** — Added Phase 9 — Deployment Automation (8 items, all checked), added Caddy note to Phase 8
+5. **`documentation/prompt-history.md`** — Added Session 3 (Prompts 7–12) documenting deployment automation work
+6. Updated Design Decisions Log with new entries
+
+---
+
 ## Design Decisions Log
 
 | Decision | Choice | Reason |
@@ -210,3 +336,7 @@ Fixed the domain mapping across all documentation files:
 | Backend domain | `www.dhiarr.qzz.io` | Dhiarlink API on LXC container |
 | Dev server port | 3000 | Matches original upstream default |
 | Docker port | 8080 (non-root UID 101) | Security best practice, matches nginx-unprivileged |
+| Pre-configured server | None (empty API key) | Avoids exposing API key in client-side `servers.json` |
+| Deploy automation | `deploy.sh` + `.env` file | Single-command redeploy without memorizing Docker flags |
+| Docker networking | `dhiarlink_dhiarlink_internal` | Caddy reverse proxy reaches container via internal network |
+| Reverse proxy | Caddy (not Cloudflare Tunnel direct) | Routes host port 3000 → Caddy → containers internally |

@@ -91,6 +91,17 @@
 - [x] Running in production at `app.dhiarr.qzz.io`
 - [x] Backend API connected at `www.dhiarr.qzz.io`
 - [x] Cloudflare Tunnel routing configured
+- [x] Caddy reverse proxy routing traffic to container via Docker internal network
+
+### Phase 9 — Deployment Automation
+- [x] `deploy.sh` — one-command production redeploy script (`git pull && ./deploy.sh`)
+- [x] `.env.example` — production config template (server URL, API key, Docker network)
+- [x] `.env` auto-loading in deploy script — loads config from file if present
+- [x] `.gitignore` — added `.env` to prevent committing secrets
+- [x] Docker network support (`--network dhiarlink_dhiarlink_internal`) for Caddy routing
+- [x] `DHIARLINK_SERVER_FORWARD_CREDENTIALS` env var support in deploy script
+- [x] Documentation updated: `deployment.md` quick-redeploy section, `docs.md` automation section, `CHANGELOG.md`
+- [x] No pre-configured server by default — visitors add servers via UI (intentional, avoids exposing API key)
 
 ### Build Verification
 - [x] `npm install` — All 663 packages installed

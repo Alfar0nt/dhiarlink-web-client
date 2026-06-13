@@ -217,95 +217,22 @@ dhiarlink-web-client/
 │   ├── create-dist-file.mjs        # Creates distributable ZIP
 │   ├── replace-version.mjs         # Injects version into build
 │   └── set-homepage.cjs            # Sets homepage in package.json
-├── src/
-│   ├── api/services/
-│   │   └── ShlinkApiClientBuilder.ts   # API client factory
-│   ├── app/
-│   │   ├── App.tsx                     # Root component, forces dark theme
-│   │   └── reducers/
-│   │       └── appUpdates.ts           # App version tracking
-│   ├── common/
-│   │   ├── img/
-│   │   │   └── DhiarlinkLogo.tsx       # Terminal-style SVG logo
-│   │   ├── AppUpdateBanner.tsx         # PWA update notification
-│   │   ├── ErrorHandler.tsx            # Error boundary
-│   │   ├── ErrorLayout.tsx             # Error page layout
-│   │   ├── Home.tsx                    # Welcome/landing page
-│   │   ├── MainHeader.tsx              # Top navigation bar
-│   │   ├── NoMenuLayout.tsx            # Layout without sidebar
-│   │   ├── NotFound.tsx                # 404 page
-│   │   ├── ScrollToTop.tsx             # Route change scroll reset
-│   │   ├── ShlinkVersions.tsx          # Version display
-│   │   ├── ShlinkVersionsContainer.tsx # Version container
-│   │   └── ShlinkWebComponentContainer.tsx # Dashboard wrapper
-│   ├── container/
-│   │   ├── context.tsx                 # React context for DI
-│   │   └── index.ts                    # BottleJS service registration
-│   ├── servers/
-│   │   ├── data/
-│   │   │   └── index.ts               # Server data types
-│   │   ├── helpers/
-│   │   │   ├── DuplicatedServersModal.tsx
-│   │   │   ├── ImportServersBtn.tsx
-│   │   │   ├── ServerError.tsx
-│   │   │   ├── ServerForm.tsx
-│   │   │   ├── withSelectedServer.tsx
-│   │   │   └── withoutSelectedServer.tsx
-│   │   ├── reducers/
-│   │   │   ├── remoteServers.ts
-│   │   │   ├── selectedServer.ts
-│   │   │   └── servers.ts
-│   │   ├── services/
-│   │   │   ├── ServersExporter.ts
-│   │   │   └── ServersImporter.ts
-│   │   ├── CreateServer.tsx
-│   │   ├── DeleteServerButton.tsx
-│   │   ├── DeleteServerModal.tsx
-│   │   ├── EditServer.tsx
-│   │   ├── ManageServers.tsx
-│   │   ├── ManageServersRow.tsx
-│   │   ├── ManageServersRowDropdown.tsx
-│   │   ├── ServersDropdown.tsx
-│   │   └── ServersListGroup.tsx
-│   ├── settings/
-│   │   ├── helpers/
-│   │   ├── reducers/
-│   │   │   └── settings.ts
-│   │   └── Settings.tsx
-│   ├── store/
-│   │   ├── helpers.ts
-│   │   ├── index.ts                    # Redux store (namespace: 'dhiarlink')
-│   │   └── reducers.ts
-│   ├── utils/
-│   │   ├── helpers/
-│   │   │   ├── csvjson.ts
-│   │   │   ├── files.ts
-│   │   │   ├── hooks.ts
-│   │   │   ├── sw.ts
-│   │   │   ├── uri.ts
-│   │   │   └── version.ts
-│   │   ├── services/
-│   │   │   ├── LocalStorage.ts
-│   │   │   └── TagColorsStorage.ts
-│   │   ├── types.ts
-│   │   └── utils.ts
-│   ├── index.tsx                       # Application entry point
-│   ├── service-worker.ts              # Workbox service worker
-│   ├── serviceWorkerRegistration.ts   # SW registration
-│   └── tailwind.css                   # Deep Ocean theme & Tailwind config
-├── test/                               # Mirrors src/ structure
-├── Dockerfile                         # Multi-stage: node → nginx
-├── dev.Dockerfile                     # Development container
-├── docker-compose.yml                 # Dev orchestration
-├── index.html                         # HTML entry with Google Fonts
-├── manifest.ts                        # PWA manifest config
-├── vite.config.ts                     # Vite + Vitest configuration
-├── tsconfig.json                      # TypeScript config
-├── eslint.config.js                   # ESLint flat config
-├── package.json                       # Dependencies & scripts
-├── screenshoot_1.png                  # Screenshot — dashboard home
-├── screenshoot_2.png                  # Screenshot — server management
-└── screenshoot_3.png                  # Screenshot — URL management
+├── src/                            # Application source code (see below)
+├── test/                           # Mirrors src/ structure
+├── deploy.sh                       # One-command production redeploy script
+├── .env.example                    # Production config template (gitignored .env)
+├── Dockerfile                      # Multi-stage: node → nginx
+├── dev.Dockerfile                  # Development container
+├── docker-compose.yml              # Dev orchestration
+├── index.html                      # HTML entry with Google Fonts
+├── manifest.ts                     # PWA manifest config
+├── vite.config.ts                  # Vite + Vitest configuration
+├── tsconfig.json                   # TypeScript config
+├── eslint.config.js                # ESLint flat config
+├── package.json                    # Dependencies & scripts
+├── screenshoot_1.png               # Screenshot — dashboard home
+├── screenshoot_2.png               # Screenshot — server management
+└── screenshoot_3.png               # Screenshot — URL management
 ```
 
 ---
@@ -428,6 +355,35 @@ docker run -d -p 8080:8080 \
 ```
 
 > **Security:** Since this is a client-side app, `servers.json` (including API keys) is accessible from the browser. Only use pre-configuration in trusted/self-hosted environments.
+
+---
+
+## Deployment Automation
+
+The `deploy.sh` script at the project root automates the full production redeploy cycle:
+
+```bash
+git pull && ./deploy.sh
+```
+
+The script loads config from `.env` (created once from `.env.example`), then:
+1. Builds the production Docker image (`docker build`)
+2. Stops and removes the old container
+3. Starts a new container with the saved environment variables and Docker network
+
+### `.env` Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DHIARLINK_SERVER_URL` | `https://www.dhiarr.qzz.io` | Backend API URL |
+| `DHIARLINK_SERVER_API_KEY` | *(empty)* | API key for pre-configured server |
+| `DHIARLINK_SERVER_NAME` | `Dhiarlink` | Display name in the dashboard |
+| `DHIARLINK_SERVER_FORWARD_CREDENTIALS` | `false` | Forward browser credentials |
+| `DOCKER_NETWORK` | *(empty)* | Docker network for Caddy routing |
+
+The `.env` file is gitignored — secrets never enter version control.
+
+> **Note:** When `DHIARLINK_SERVER_API_KEY` is empty, no default server is pre-configured. Visitors must manually add a server via the dashboard UI. This is intentional for public deployments where exposing an API key in `servers.json` is undesirable.
 
 ---
 

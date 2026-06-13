@@ -38,6 +38,7 @@ if [ -z "$SERVER_API_KEY" ]; then
 fi
 
 echo "==> Building production image..."
+echo "    (first build: ~5 min, subsequent builds: ~30s thanks to layer caching)"
 docker build -t "$IMAGE_NAME":latest .
 
 echo "==> Stopping old container (if exists)..."

@@ -1,8 +1,15 @@
 FROM node:26.3-alpine AS node
-COPY . /dhiarlink-web-client
 ARG VERSION="latest"
 ENV VERSION=${VERSION}
-RUN cd /dhiarlink-web-client && npm ci && node --run build
+
+# Install dependencies first (cached unless package files change)
+COPY package.json package-lock.json /dhiarlink-web-client/
+WORKDIR /dhiarlink-web-client
+RUN npm ci
+
+# Copy source and build
+COPY . .
+RUN node --run build
 
 FROM nginxinc/nginx-unprivileged:1.31.1-alpine
 ARG UID=101
