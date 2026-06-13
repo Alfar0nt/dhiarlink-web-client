@@ -37,9 +37,20 @@ if [ -z "$SERVER_API_KEY" ]; then
   echo ""
 fi
 
-echo "==> Building production image..."
-echo "    (first build: ~5 min, subsequent builds: ~30s thanks to layer caching)"
-docker build --pull=never -t "$IMAGE_NAME":latest .
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+IMAGE_TAR="$SCRIPT_DIR/dhiarlink-web-client.tar.gz"
+
+# If a pre-built image tarball exists, load it instead of building
+if [ -f "$IMAGE_TAR" ]; then
+  echo "==> Loading pre-built image from $IMAGE_TAR"
+  docker load -i "$IMAGE_TAR"
+  echo "    Removing tarball to free space..."
+  rm -f "$IMAGE_TAR"
+else
+  echo "==> Building production image..."
+  echo "    (first build: ~5 min, subsequent builds: ~30s thanks to layer caching)"
+  docker build -t "$IMAGE_NAME":latest .
+fi
 
 echo "==> Stopping old container (if exists)..."
 docker stop "$CONTAINER_NAME" 2>/dev/null || true

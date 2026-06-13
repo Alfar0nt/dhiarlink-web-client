@@ -8,6 +8,9 @@
 # environment
 .env
 
+# docker image tarball
+dhiarlink-web-client.tar.gz
+
 # production
 /build
 /dist
