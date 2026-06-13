@@ -5,6 +5,9 @@
 /coverage
 /reports
 
+# environment
+.env
+
 # production
 /build
 /dist
