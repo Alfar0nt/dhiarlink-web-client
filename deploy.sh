@@ -39,7 +39,7 @@ fi
 
 echo "==> Building production image..."
 echo "    (first build: ~5 min, subsequent builds: ~30s thanks to layer caching)"
-docker build -t "$IMAGE_NAME":latest .
+docker build --pull=never -t "$IMAGE_NAME":latest .
 
 echo "==> Stopping old container (if exists)..."
 docker stop "$CONTAINER_NAME" 2>/dev/null || true
