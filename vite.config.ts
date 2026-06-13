@@ -25,6 +25,17 @@ export default defineConfig({
 
   build: {
     outDir: 'build',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Split vendor bundles for parallel loading + independent caching
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-redux': ['@reduxjs/toolkit', 'react-redux'],
+          'vendor-router': ['react-router'],
+          'vendor-icons': ['@fortawesome/fontawesome-svg-core', '@fortawesome/free-solid-svg-icons', '@fortawesome/free-regular-svg-icons', '@fortawesome/free-brands-svg-icons', '@fortawesome/react-fontawesome'],
+        },
+      },
+    },
   },
 
   server: {
