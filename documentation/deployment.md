@@ -31,13 +31,13 @@
 ┌──────────────────────────────────────────────────────────────────┐
 │                         DNS / Tunnel                              │
 │                                                                   │
-│  dhiarr.qzz.io      → Dhiarlink backend  (PHP REST API)          │
+│  www.dhiarr.qzz.io  → Dhiarlink backend  (PHP REST API)          │
 │  app.dhiarr.qzz.io  → This project       (React SPA dashboard)   │
 │  link.dhiarr.qzz.io → Dhiarlink backend  (short URL redirects)   │
 └──────────────────────────────────────────────────────────────────┘
 
 The web client (this repo) is a static React PWA.
-It connects to the Dhiarlink REST API at https://dhiarr.qzz.io/rest/v3/...
+It connects to the Dhiarlink REST API at https://www.dhiarr.qzz.io/rest/v3/...
 No server-side rendering — just static files served by nginx or any HTTP server.
 ```
 
@@ -96,7 +96,7 @@ Once the dashboard opens at `http://localhost:3000`, you'll see the welcome scre
 1. Click **"Add a server"**
 2. Fill in:
    - **Name:** `Dhiarlink (local)`
-   - **URL:** `http://localhost:8000` (if running backend locally via docker-compose) or `https://dhiarr.qzz.io`
+   - **URL:** `http://localhost:8000` (if running backend locally via docker-compose) or `https://www.dhiarr.qzz.io`
    - **API key:** Generate one via `bin/cli api-key:generate` in the backend
 
 **Option B: Pre-configure via `servers.json`**
@@ -173,7 +173,7 @@ To pre-configure a server:
 docker run -d \
   --name dhiarlink_web_client \
   -p 8080:8080 \
-  -e DHIARLINK_SERVER_URL=https://dhiarr.qzz.io \
+  -e DHIARLINK_SERVER_URL=https://www.dhiarr.qzz.io \
   -e DHIARLINK_SERVER_API_KEY=your-api-key \
   -e DHIARLINK_SERVER_NAME="Dhiarlink Production" \
   dhiarlink-web-client
@@ -228,7 +228,7 @@ ingress:
       noTLSVerify: true
 
   # Dhiarlink backend API (if also tunneling from same server)
-  - hostname: dhiarr.qzz.io
+  - hostname: www.dhiarr.qzz.io
     service: http://localhost:8000
 
   # Short URL domain (same backend)
@@ -244,7 +244,7 @@ ingress:
 ```bash
 # Point the subdomains to the tunnel
 cloudflared tunnel route dns dhiarlink-web-client app.dhiarr.qzz.io
-cloudflared tunnel route dns dhiarlink-web-client dhiarr.qzz.io
+cloudflared tunnel route dns dhiarlink-web-client www.dhiarr.qzz.io
 cloudflared tunnel route dns dhiarlink-web-client link.dhiarr.qzz.io
 ```
 
@@ -255,7 +255,7 @@ docker run -d \
   --name dhiarlink_web_client \
   --restart unless-stopped \
   -p 8080:8080 \
-  -e DHIARLINK_SERVER_URL=https://dhiarr.qzz.io \
+  -e DHIARLINK_SERVER_URL=https://www.dhiarr.qzz.io \
   -e DHIARLINK_SERVER_API_KEY=your-api-key \
   -e DHIARLINK_SERVER_NAME="Dhiarlink" \
   dhiarlink-web-client
@@ -294,7 +294,7 @@ If you prefer GUI management:
 4. Copy the install token and run it on your server
 5. Add public hostnames:
    - `app.dhiarr.qzz.io` → `http://localhost:8080`
-   - `dhiarr.qzz.io` → `http://localhost:8000` (if applicable)
+   - `www.dhiarr.qzz.io` → `http://localhost:8000` (if applicable)
    - `link.dhiarr.qzz.io` → `http://localhost:8000` (if applicable)
 6. Enable **TLS** in the tunnel settings for automatic HTTPS
 
@@ -306,7 +306,7 @@ When running the web client via Docker, you can pre-configure the Dhiarlink serv
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `DHIARLINK_SERVER_URL` | Base URL of the Dhiarlink API | `https://dhiarr.qzz.io` |
+| `DHIARLINK_SERVER_URL` | Base URL of the Dhiarlink API | `https://www.dhiarr.qzz.io` |
 | `DHIARLINK_SERVER_API_KEY` | API key for authentication | `your-api-key-here` |
 | `DHIARLINK_SERVER_NAME` | Display name in the dashboard | `Dhiarlink Production` |
 | `DHIARLINK_SERVER_FORWARD_CREDENTIALS` | Forward browser credentials | `false` |
@@ -326,7 +326,7 @@ Where `servers.json` contains:
 [
   {
     "name": "Dhiarlink Production",
-    "url": "https://dhiarr.qzz.io",
+    "url": "https://www.dhiarr.qzz.io",
     "apiKey": "your-api-key-here",
     "autoConnect": true
   }
@@ -369,9 +369,9 @@ The backend needs these key variables (see `../dhiarlink/.env.example` for full 
 
 ### "Could not connect to this Dhiarlink server"
 
-1. Verify the backend URL is reachable from your browser: `curl https://dhiarr.qzz.io/rest/health`
+1. Verify the backend URL is reachable from your browser: `curl https://www.dhiarr.qzz.io/rest/health`
 2. Check CORS — the backend must allow requests from `app.dhiarr.qzz.io` (or `*`)
-3. Verify the API key is valid: `curl -H "X-Api-Key: your-key" https://dhiarr.qzz.io/rest/v3/short-urls`
+3. Verify the API key is valid: `curl -H "X-Api-Key: your-key" https://www.dhiarr.qzz.io/rest/v3/short-urls`
 
 ### Blank page after deployment
 

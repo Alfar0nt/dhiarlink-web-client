@@ -4,6 +4,43 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org).
 
+## [5.0.0] - 2026-06-12 — Dhiarlink Rebrand
+### Added
+* Terminal / Hacker aesthetic with Deep Ocean color palette (`#0f1419` bg, `#4a9a8e` accent, `#192028` card surface)
+* JetBrains Mono monospace font loaded via Google Fonts
+* Custom `DhiarlinkLogo.tsx` — terminal-style SVG logo (`>_` prompt + link chain)
+* `fadeIn` keyframe animation for page transitions
+* Mobile touch target sizing (44px min on coarse pointers)
+* Comprehensive documentation suite under `documentation/`
+    * `docs.md` — full project reference (tech stack, architecture, dependencies, env vars, scripts)
+    * `deployment.md` — local dev, Docker, Cloudflare Tunnel deployment guide
+    * `prompt-history.md` — development conversation log
+    * `to-do.md` — rebrand task tracker
+* Screenshots added (`screenshot_1.png`, `screenshot_2.png`, `screenshot_3.png`)
+
+### Changed
+* Forked from `shlink-web-client` and rebranded to `dhiarlink-web-client`
+* `package.json` — name, description, repository URL updated to Dhiarlink
+* `index.html` — title "Dhiarlink - URL Shortener Dashboard", theme-color meta tags, Google Fonts preload
+* `manifest.ts` — PWA short_name "Dhiarlink", name "Dhiarlink Web Client", theme/background `#0f1419`
+* `src/tailwind.css` — Complete Deep Ocean theme with Tailwind v4 `@theme` block, overriding upstream `lm-*`/`dm-*` tokens and gray scale
+* `App.tsx` — Force dark theme via `changeThemeInMarkup('dark')`, dark root background
+* All common components restyled with dark cards, accent colors, terminal-style text
+* Server management pages restyled (ServerForm, ManageServers, ServersListGroup, etc.)
+* `ShlinkVersions.tsx` — project refs updated to `dhiarlink`/`dhiarlink-web-client`, GitHub URLs updated
+* `scripts/docker/servers_from_env.sh` — env vars `DHIARLINK_SERVER_URL`/`DHIARLINK_SERVER_API_KEY`/`DHIARLINK_SERVER_NAME` with backward-compat for `SHLINK_*`
+* `src/store/index.ts` — localStorage namespace `shlink` → `dhiarlink`
+* `docker-compose.yml` — container/service names `dhiarlink_web_client_node`
+* `Dockerfile` — paths, labels, entrypoint script name updated
+* `README.md` — rewritten as concise intro with screenshots, quick start, and contributing
+* Production deployment: frontend at `app.dhiarr.qzz.io`, backend at `www.dhiarr.qzz.io`
+
+### Removed
+* `SimpleCard` dependency from upstream — replaced with custom dark card components
+* External link to Shlink docs on home page
+* Unused `useSettings` import from `App.tsx` (theme is forced dark)
+
+
 ## [4.7.1] - 2026-05-15
 ### Added
 * *Nothing*

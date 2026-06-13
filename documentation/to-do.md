@@ -2,7 +2,8 @@
 
 > Target: `app.dhiarr.qzz.io` — URL shortener dashboard
 > Theme: Terminal / Hacker Aesthetic — Deep Ocean Palette
-> Backend: `../dhiarlink` (Dhiarlink PHP backend at `dhiarr.qzz.io`)
+> Backend: `../dhiarlink` (Dhiarlink PHP backend at `www.dhiarr.qzz.io`)
+> Status: **Deployed to production on LXC container**
 
 ## Design Tokens
 
@@ -80,6 +81,16 @@
 ### Phase 7 — Documentation
 - [x] `to-do.md` — This file with full status tracking
 - [x] `deployment.md` — Full guide for local dev and production deployment
+- [x] `documentation/deployment.md` — Domain updated to `app.dhiarr.qzz.io` (frontend) + `www.dhiarr.qzz.io` (backend)
+- [x] `documentation/docs.md` — Comprehensive project documentation (tech stack, architecture, dependencies, env vars, project structure, backend integration)
+- [x] `documentation/prompt-history.md` — Full conversation/development log
+- [x] `README.md` — Streamlined to intro + screenshots + quick start + contributing
+
+### Phase 8 — Production Deployment
+- [x] Docker image built and deployed on LXC container
+- [x] Running in production at `app.dhiarr.qzz.io`
+- [x] Backend API connected at `www.dhiarr.qzz.io`
+- [x] Cloudflare Tunnel routing configured
 
 ### Build Verification
 - [x] `npm install` — All 663 packages installed
@@ -106,8 +117,8 @@
 - [ ] This requires either CSS variable overrides that reach into the web component's shadow DOM, or forking the upstream package
 
 ### Production Readiness
-- [ ] Deploy to `app.dhiarr.qzz.io` via Cloudflare Tunnel
-- [ ] Verify full flow: web client → Dhiarlink API at `dhiarr.qzz.io/rest/v3/...`
+- [x] Deploy to `app.dhiarr.qzz.io` via Cloudflare Tunnel (deployed on LXC container)
+- [ ] Verify full flow: web client → Dhiarlink API at `www.dhiarr.qzz.io/rest/v3/...`
 - [ ] Test Mercure real-time visit updates from `app.dhiarr.qzz.io` → backend
 - [ ] Configure PWA offline support and service worker caching strategy
 - [ ] Set up `servers.json` pre-configuration for production Docker deployment
