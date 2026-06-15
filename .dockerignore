@@ -11,6 +11,9 @@ test
 .env
 .env.example
 deploy.sh
+deploy-bare-metal.sh
+config/bare-metal
+scripts/bare-metal
 CHANGELOG.md
 CONTRIBUTING.md
 LICENSE

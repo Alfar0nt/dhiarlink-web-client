@@ -1,6 +1,6 @@
 # Dhiarlink Web Client — Deployment Guide
 
-> Full guide for running the Dhiarlink dashboard locally for development/testing and deploying to production via Cloudflare Tunnel.
+> Full guide for running the Dhiarlink dashboard locally for development/testing and deploying to production via Cloudflare Tunnel — supports both Docker and bare metal deployments.
 
 ---
 
@@ -16,7 +16,16 @@
 - [Production Build](#production-build)
     - [Static Files](#static-files)
     - [Docker Image](#docker-image)
-- [Quick Redeploy (Production)](#quick-redeploy-production)
+- [Quick Redeploy — Docker](#quick-redeploy--docker)
+- [Quick Redeploy — Bare Metal](#quick-redeploy--bare-metal)
+- [Bare Metal Deployment (No Docker)](#bare-metal-deployment-no-docker)
+    - [Migrating from Docker to Bare Metal](#migrating-from-docker-to-bare-metal)
+    - [Step 1: Clean Up Docker Deployment](#step-1-clean-up-docker-deployment)
+    - [Step 2: Install Node.js 22](#step-2-install-nodejs-22)
+    - [Step 3: Clone and Build the Dashboard](#step-3-clone-and-build-the-dashboard)
+    - [Step 4: Configure nginx](#step-4-configure-nginx)
+    - [Step 5: Configure Server Pre-connection (Optional)](#step-5-configure-server-pre-connection-optional)
+    - [Step 6: Verify the Dashboard](#step-6-verify-the-dashboard)
 - [Production Deployment with Cloudflare Tunnel](#production-deployment-with-cloudflare-tunnel)
     - [Option A: Cloudflared on Your Server](#option-a-cloudflared-on-your-server)
     - [Option B: Cloudflare Tunnel via Dashboard](#option-b-cloudflare-tunnel-via-dashboard)
@@ -46,15 +55,27 @@ No server-side rendering — just static files served by nginx or any HTTP serve
 
 ## Prerequisites
 
+### For Docker Deployment
+
 | Tool | Version | Purpose |
-|------|---------|---------|
-| Node.js | >= 22.x | JavaScript runtime |
+|------|---------|--------|
+| Node.js | >= 22.x | JavaScript runtime (build only) |
 | npm | >= 10.x | Package manager |
-| Docker | >= 24.x | Container runtime (for production) |
+| Docker | >= 24.x | Container runtime |
 | Docker Compose | >= 2.x | Multi-container orchestration |
 | Git | >= 2.x | Version control |
 
-For production deployment:
+### For Bare Metal Deployment
+
+| Tool | Version | Purpose |
+|------|---------|--------|
+| Node.js | >= 22.x | Build the React app (one-time) |
+| npm | >= 10.x | Package manager |
+| nginx | >= 1.25 | Serve static files on port 8081 |
+| Git | >= 2.x | Clone and pull updates |
+
+### Common Requirements
+
 - A Cloudflare account (free tier works)
 - `cloudflared` CLI installed on your server
 - The Dhiarlink backend running and accessible
@@ -182,7 +203,7 @@ docker run -d \
 
 ---
 
-## Quick Redeploy (Production)
+## Quick Redeploy — Docker
 
 For day-to-day updates after pushing to GitHub, use the included `deploy.sh` script:
 
@@ -223,6 +244,270 @@ The `.env` file is gitignored, so your API key and network config are never comm
 | `DOCKER_NETWORK` | `dhiarlink_dhiarlink_internal` | Network shared with Caddy |
 
 > **Tip:** If `DHIARLINK_SERVER_API_KEY` is empty, visitors must manually add a server via the UI. This is intentional — it avoids exposing API keys in the client-side `servers.json`.
+
+---
+
+## Quick Redeploy — Bare Metal
+
+For bare metal / LXC deployments (no Docker), use the `deploy-bare-metal.sh` script:
+
+```bash
+cd /opt/dhiarlink-web-client
+git pull && ./deploy-bare-metal.sh
+```
+
+This will:
+1. Load config from `.env`
+2. Run `npm ci` (cached unless package files changed)
+3. Build the production bundle to `build/`
+4. Generate `servers.json` (if API key is configured)
+5. Reload nginx
+
+See the [Bare Metal Deployment](#bare-metal-deployment-no-docker) section below for the full first-time setup guide.
+
+---
+
+## Bare Metal Deployment (No Docker)
+
+This guide deploys the Dhiarlink dashboard natively on Debian 13 — no Docker, no containers. The dashboard is a static React SPA served by nginx on port 8081, with Caddy reverse proxy routing `app.dhiarr.qzz.io` → `127.0.0.1:8081`.
+
+> **Prerequisite:** The Dhiarlink backend must already be deployed on bare metal (see `../dhiarlink/documentation/deployment.md` → Bare Metal Deployment section). This guide assumes Caddy, RoadRunner, MariaDB, and Redis are already running.
+
+### Architecture
+
+```
+                          Cloudflare Edge (TLS termination)
+                          ├── www.dhiarr.qzz.io   (landing page)
+                          ├── app.dhiarr.qzz.io   (dashboard UI)
+                          └── link.dhiarr.qzz.io  (short URL redirects)
+                                    │
+                          Cloudflare Tunnel (encrypted)
+                                    │
+                     ┌──────────────▼──────────────┐
+                     │  Caddy 2 (port 3000)         │
+                     └────┬────────────┬───────────┘
+                          │            │
+                     ┌────▼──────┐ ┌───▼─────────────┐
+                     │ RoadRunner │ │ nginx (port 8081)│
+                     │ (port 8080)│ │ Dashboard SPA    │
+                     └──┬──────┬─┘ └──────────────────┘
+                        │      │
+                     ┌───▼───┐ ┌─▼─────┐
+                     │MariaDB│ │Redis  │
+                     └───────┘ └───────┘
+```
+
+The dashboard (this project) runs on nginx at `127.0.0.1:8081`. Caddy routes all requests for `app.dhiarr.qzz.io` to it.
+
+### Prerequisites
+
+| Software | Version | Purpose |
+|----------|---------|--------|
+| Node.js | 22+ LTS | Build the React app (one-time, only on deploy) |
+| npm | 10+ | Package manager |
+| nginx | 1.25+ | Serve static files on port 8081 |
+| Git | 2+ | Clone and pull updates |
+| Caddy | 2.x | Already installed with the backend |
+
+---
+
+### Migrating from Docker to Bare Metal
+
+If you previously ran the dashboard via Docker (`dhiarlink_dashboard` container), clean it up first:
+
+### Step 1: Clean Up Docker Deployment
+
+```bash
+# Stop and remove the dashboard container
+docker stop dhiarlink_dashboard 2>/dev/null || true
+docker rm dhiarlink_dashboard 2>/dev/null || true
+
+# Remove the Docker image
+docker rmi dhiarlink-web-client:latest 2>/dev/null || true
+
+# Verify it's gone
+docker ps -a | grep dhiarlink_dashboard
+# Should return nothing
+
+# Remove deploy.sh and .env (Docker-specific, bare metal uses different files)
+rm -f deploy.sh
+# Keep .env if you want to reuse the same values for bare metal
+```
+
+> **Note:** Do NOT stop or remove the other Docker containers (`dhiarlink`, `dhiarlink_caddy`, `dhiarlink_redis`, `dhiarlink_db`) if you're running the backend via Docker. This guide only replaces the dashboard container with a bare metal nginx setup.
+
+If you're also migrating the backend from Docker to bare metal, follow `../dhiarlink/documentation/deployment.md` → "Migrating from Docker to Bare Metal" first, then continue here.
+
+---
+
+### Step 2: Install Node.js 22
+
+Node.js is only needed to build the dashboard. Once built, nginx serves the static files — Node.js is not required at runtime.
+
+```bash
+# Install Node.js 22 LTS (Debian 13)
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# Verify
+node --version   # Should be v22.x
+npm --version    # Should be 10+
+```
+
+---
+
+### Step 3: Clone and Build the Dashboard
+
+```bash
+# Clone the dashboard repo (sibling to the backend)
+sudo git clone <your-web-client-repo-url> /opt/dhiarlink-web-client
+sudo chown -R $USER:$USER /opt/dhiarlink-web-client
+
+cd /opt/dhiarlink-web-client
+
+# Create .env from template (optional — for server pre-configuration)
+cp .env.example .env
+nano .env
+# Set DHIARLINK_SERVER_API_KEY if you want a pre-configured server
+# Leave it empty if you want visitors to add the server manually
+
+# Install dependencies and build
+npm ci
+npm run build
+```
+
+The build outputs static files to `build/`:
+```
+build/
+├── index.html
+├── manifest.json
+├── service-worker.js
+├── assets/
+│   ├── vendor-react-*.js
+│   ├── vendor-redux-*.js
+│   ├── vendor-router-*.js
+│   ├── vendor-icons-*.js
+│   ├── index-*.js
+│   └── index-*.css
+├── icons/
+│   └── icon-*.png
+└── favicon.*
+```
+
+---
+
+### Step 4: Configure nginx
+
+```bash
+# Install nginx (if not already installed)
+sudo apt install -y nginx
+
+# Copy the bare metal nginx config
+sudo cp /opt/dhiarlink-web-client/config/bare-metal/nginx.conf \
+  /etc/nginx/sites-available/dhiarlink-dashboard
+
+# Enable the site
+sudo ln -sf /etc/nginx/sites-available/dhiarlink-dashboard /etc/nginx/sites-enabled/
+
+# Remove default site (if it conflicts on port 80)
+sudo rm -f /etc/nginx/sites-enabled/default
+
+# Test configuration
+sudo nginx -t
+
+# Restart nginx
+sudo systemctl restart nginx
+sudo systemctl enable nginx
+
+# Verify nginx is listening on port 8081
+sudo ss -tlnp | grep 8081
+# Should show: 127.0.0.1:8081
+```
+
+> **Important:** The nginx config in `config/bare-metal/nginx.conf` is set up to listen on `127.0.0.1:8081` and serve files from `/opt/dhiarlink-web-client/build`. This matches the backend's `Caddyfile.bare-metal` which routes `app.dhiarr.qzz.io` → `127.0.0.1:8081`.
+
+---
+
+### Step 5: Configure Server Pre-connection (Optional)
+
+If you want a pre-configured server to appear automatically when users visit the dashboard, set the API key in `.env` and run the setup script:
+
+```bash
+# Edit .env
+nano /opt/dhiarlink-web-client/.env
+
+# Set these values:
+# DHIARLINK_SERVER_URL=https://www.dhiarr.qzz.io
+# DHIARLINK_SERVER_API_KEY=your-api-key-here
+# DHIARLINK_SERVER_NAME=Dhiarlink
+# DHIARLINK_SERVER_FORWARD_CREDENTIALS=false
+
+# Generate servers.json
+bash /opt/dhiarlink-web-client/scripts/bare-metal/setup-servers-json.sh
+```
+
+This writes `build/servers.json` which the dashboard reads on load.
+
+> **Security note:** Since `servers.json` is a static file served to browsers, the API key is visible to anyone who visits the dashboard URL. For public deployments, leave `DHIARLINK_SERVER_API_KEY` empty so visitors must add the server manually.
+
+---
+
+### Step 6: Verify the Dashboard
+
+```bash
+# Test nginx is serving the dashboard
+curl -s http://127.0.0.1:8081 | head -5
+# Should return HTML starting with <!doctype html>
+
+# Test through Caddy (must be running with Caddyfile.bare-metal)
+curl -s -H "Host: app.dhiarr.qzz.io" http://localhost:3000 | head -5
+
+# Check all services are running
+sudo systemctl status dhiarlink     # RoadRunner (backend)
+sudo systemctl status caddy         # Reverse proxy
+sudo systemctl status nginx         # Dashboard
+sudo systemctl status mariadb       # Database
+sudo systemctl status redis-server  # Cache
+sudo systemctl status cloudflared   # Tunnel
+```
+
+Then open in your browser: **https://app.dhiarr.qzz.io**
+
+---
+
+### Bare Metal Maintenance
+
+#### Updating the Dashboard
+
+```bash
+cd /opt/dhiarlink-web-client
+git pull && ./deploy-bare-metal.sh
+```
+
+The `deploy-bare-metal.sh` script handles everything: `npm ci` → `npm run build` → `servers.json` → nginx reload.
+
+#### Viewing Logs
+
+```bash
+# nginx access and error logs
+sudo tail -f /var/log/nginx/access.log
+sudo tail -f /var/log/nginx/error.log
+
+# nginx service status
+sudo systemctl status nginx
+sudo journalctl -u nginx -f
+```
+
+#### Manual Rebuild
+
+If you need to rebuild without pulling:
+
+```bash
+cd /opt/dhiarlink-web-client
+npm run build
+bash scripts/bare-metal/setup-servers-json.sh
+sudo systemctl reload nginx
+```
 
 ---
 

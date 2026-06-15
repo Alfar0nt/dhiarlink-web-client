@@ -3,7 +3,7 @@
 > Target: `app.dhiarr.qzz.io` — URL shortener dashboard
 > Theme: Terminal / Hacker Aesthetic — Deep Ocean Palette
 > Backend: `../dhiarlink` (Dhiarlink PHP backend at `www.dhiarr.qzz.io`)
-> Status: **Deployed to production on LXC container**
+> Status: **Deployed to production on LXC container (bare metal)**
 
 ## Design Tokens
 
@@ -103,6 +103,16 @@
 - [x] Documentation updated: `deployment.md` quick-redeploy section, `docs.md` automation section, `CHANGELOG.md`
 - [x] No pre-configured server by default — visitors add servers via UI (intentional, avoids exposing API key)
 
+### Phase 10 — Bare Metal Deployment
+- [x] `config/bare-metal/nginx.conf` — nginx config for native deployment (port 8081, localhost bind)
+- [x] `scripts/bare-metal/setup-servers-json.sh` — generates `servers.json` from `.env` for bare metal
+- [x] `deploy-bare-metal.sh` — one-command bare metal redeploy script
+- [x] Docker cleanup guide in `documentation/deployment.md` (stop/remove container, image, optional Docker uninstall)
+- [x] Full bare metal deployment guide in `documentation/deployment.md` (Node.js, build, nginx, servers.json, verification)
+- [x] Updated `documentation/docs.md` — bare metal architecture, project structure, deploy automation
+- [x] Updated `.dockerignore` — exclude bare metal files from Docker build context
+- [x] Updated `CHANGELOG.md` — bare metal support entries
+
 ### Build Verification
 - [x] `npm install` — All 663 packages installed
 - [x] `tsc --noEmit` — TypeScript compiles with zero errors
@@ -129,6 +139,7 @@
 
 ### Production Readiness
 - [x] Deploy to `app.dhiarr.qzz.io` via Cloudflare Tunnel (deployed on LXC container)
+- [x] Bare metal deployment — nginx on port 8081, Caddy reverse proxy, no Docker
 - [ ] Verify full flow: web client → Dhiarlink API at `www.dhiarr.qzz.io/rest/v3/...`
 - [ ] Test Mercure real-time visit updates from `app.dhiarr.qzz.io` → backend
 - [ ] Configure PWA offline support and service worker caching strategy

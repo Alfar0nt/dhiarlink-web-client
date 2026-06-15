@@ -322,6 +322,36 @@ Updated all documentation to reflect the deployment automation additions:
 
 ---
 
+### Prompt 13 — Bare Metal Deployment Support
+
+**User:**
+
+> I've changed my mind. I want to deploy this project in baremetal deployment. I've already deployed the dhiarlink (../dhiarlink) backend on the baremetal and it deployed successfully. Now, what I want you to do, is to:
+> 1. Update the code to support baremetal deployment, if there's any
+> 2. Update the deployment.md and maybe docs.md to include the full guide on how to install this project in baremetal LXC Debian 13 environment, also include the tutorial to clean up the previous Docker deployment of this project
+> 3. You can read the deployment of the dhiarlink backend project on ../dhiarlink/documentation/deployment.md and any other documentation files so that this project will be fully compatible and running smoothly with the dhiarlink backend server
+
+**Assistant Response:**
+
+Read the backend's bare metal deployment guide (Caddyfile.bare-metal, nginx on port 8081, architecture). Created full bare metal support:
+
+1. **`config/bare-metal/nginx.conf`** — nginx config listening on `127.0.0.1:8081`, serving `build/` directory, SPA fallback, gzip, caching rules
+2. **`scripts/bare-metal/setup-servers-json.sh`** — generates `build/servers.json` from `.env` (bare metal equivalent of `scripts/docker/servers_from_env.sh`)
+3. **`deploy-bare-metal.sh`** — one-command redeploy: `npm ci` → `npm run build` → `setup-servers-json.sh` → nginx reload
+4. **`.dockerignore`** — added `deploy-bare-metal.sh`, `config/bare-metal`, `scripts/bare-metal` to exclude from Docker context
+5. **`documentation/deployment.md`** — Added full bare metal guide: Docker cleanup, Node.js install, build, nginx config, servers.json, verification, maintenance
+6. **`documentation/docs.md`** — Updated architecture, tech stack, project structure, deployment automation section for bare metal
+7. **`documentation/to-do.md`** — Added Phase 10 (Bare Metal Deployment, 8 items)
+8. **`CHANGELOG.md`** — Added bare metal entries
+
+**Key design decisions:**
+- nginx binds to `127.0.0.1:8081` (matches backend's `Caddyfile.bare-metal` routing)
+- Build output goes to `build/` (not `dist/` — backend docs incorrectly reference `dist`)
+- No Docker containers needed for the dashboard — static files served by nginx
+- Node.js only needed at build time, not at runtime
+
+---
+
 ## Design Decisions Log
 
 | Decision | Choice | Reason |
@@ -340,3 +370,5 @@ Updated all documentation to reflect the deployment automation additions:
 | Deploy automation | `deploy.sh` + `.env` file | Single-command redeploy without memorizing Docker flags |
 | Docker networking | `dhiarlink_dhiarlink_internal` | Caddy reverse proxy reaches container via internal network |
 | Reverse proxy | Caddy (not Cloudflare Tunnel direct) | Routes host port 3000 → Caddy → containers internally |
+| Bare metal dashboard | nginx on port 8081 | Matches backend's Caddyfile.bare-metal routing `app.dhiarr.qzz.io → 127.0.0.1:8081` |
+| Build output directory | `build/` (not `dist/`) | Matches actual Vite output (`outDir: 'build'` in vite.config.ts) |

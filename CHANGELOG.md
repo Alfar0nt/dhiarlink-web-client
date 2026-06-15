@@ -18,9 +18,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
     * `to-do.md` — rebrand task tracker
 * Screenshots added (`screenshot_1.png`, `screenshot_2.png`, `screenshot_3.png`)
 * `deploy.sh` — one-command production redeploy script (`git pull && ./deploy.sh`)
+* `deploy-bare-metal.sh` — one-command bare metal redeploy script (`git pull && ./deploy-bare-metal.sh`)
 * `.env.example` — production config template (server URL, API key, Docker network)
 * `.env` support in deploy script — auto-loads config from file, gitignored for security
 * `.gitignore` — added `.env` to prevent committing secrets
+* Bare metal deployment support:
+    * `config/bare-metal/nginx.conf` — nginx config for native deployment (port 8081)
+    * `scripts/bare-metal/setup-servers-json.sh` — generates `servers.json` from `.env` for bare metal
+    * Full bare metal deployment guide in `documentation/deployment.md` (Docker cleanup, Node.js build, nginx setup)
+    * Updated `documentation/docs.md` with bare metal architecture and project structure
 
 ### Changed
 * Forked from `shlink-web-client` and rebranded to `dhiarlink-web-client`

@@ -56,7 +56,7 @@ The web client is a **static React SPA** served by nginx (or any HTTP server). I
 
 There is **no server-side rendering**. The app is purely client-side — static HTML, CSS, and JS.
 
-**Production deployment:** Running on an LXC container, served via Docker + nginx on port 8080, exposed through a Cloudflare Tunnel at `app.dhiarr.qzz.io`.
+**Production deployment:** Running on a bare metal LXC container (Debian 13), served by nginx on port 8081, routed through Caddy reverse proxy and Cloudflare Tunnel at `app.dhiarr.qzz.io`. Docker deployment is also supported.
 
 ---
 
@@ -78,8 +78,7 @@ There is **no server-side rendering**. The app is purely client-side — static 
 | **DI Container** | BottleJS | 2.x |
 | **Testing** | Vitest + Testing Library + Playwright | 4.x |
 | **Linting** | ESLint | 9.x |
-| **Containerization** | Docker + nginx (Alpine) | — |
-| **Deployment** | Cloudflare Tunnel | — |
+| **Deployment** | nginx (bare metal) or Docker + nginx | — |
 
 ---
 
@@ -197,8 +196,10 @@ The `@layer base` block in `tailwind.css` provides:
 ```
 dhiarlink-web-client/
 ├── config/
+│   ├── bare-metal/
+│   │   └── nginx.conf              # Bare metal nginx server config
 │   ├── docker/
-│   │   └── nginx.conf              # Production nginx server config
+│   │   └── nginx.conf              # Docker nginx server config
 │   └── test/
 │       └── setupTests.ts           # Test setup (vitest)
 ├── documentation/
@@ -212,6 +213,8 @@ dhiarlink-web-client/
 │   ├── .htaccess                   # Apache fallback rules
 │   ├── favicon.ico/svg/png/gif     # Favicons
 ├── scripts/
+│   ├── bare-metal/
+│   │   └── setup-servers-json.sh   # Bare metal: generate servers.json from .env
 │   ├── docker/
 │   │   └── servers_from_env.sh     # Docker entrypoint: DHIARLINK_* env → servers.json
 │   ├── create-dist-file.mjs        # Creates distributable ZIP
@@ -219,7 +222,8 @@ dhiarlink-web-client/
 │   └── set-homepage.cjs            # Sets homepage in package.json
 ├── src/                            # Application source code (see below)
 ├── test/                           # Mirrors src/ structure
-├── deploy.sh                       # One-command production redeploy script
+├── deploy.sh                       # One-command Docker redeploy script
+├── deploy-bare-metal.sh            # One-command bare metal redeploy script
 ├── .env.example                    # Production config template (gitignored .env)
 ├── Dockerfile                      # Multi-stage: node → nginx
 ├── dev.Dockerfile                  # Development container
@@ -360,16 +364,23 @@ docker run -d -p 8080:8080 \
 
 ## Deployment Automation
 
-The `deploy.sh` script at the project root automates the full production redeploy cycle:
+Two deploy scripts are provided for different deployment modes:
+
+### Docker (`deploy.sh`)
 
 ```bash
 git pull && ./deploy.sh
 ```
 
-The script loads config from `.env` (created once from `.env.example`), then:
-1. Builds the production Docker image (`docker build`)
-2. Stops and removes the old container
-3. Starts a new container with the saved environment variables and Docker network
+Builds the Docker image and restarts the container. Config is loaded from `.env`.
+
+### Bare Metal (`deploy-bare-metal.sh`)
+
+```bash
+git pull && ./deploy-bare-metal.sh
+```
+
+Builds the production bundle (`npm ci` → `npm run build`), generates `servers.json`, and reloads nginx. No Docker required.
 
 ### `.env` Configuration
 
@@ -379,7 +390,7 @@ The script loads config from `.env` (created once from `.env.example`), then:
 | `DHIARLINK_SERVER_API_KEY` | *(empty)* | API key for pre-configured server |
 | `DHIARLINK_SERVER_NAME` | `Dhiarlink` | Display name in the dashboard |
 | `DHIARLINK_SERVER_FORWARD_CREDENTIALS` | `false` | Forward browser credentials |
-| `DOCKER_NETWORK` | *(empty)* | Docker network for Caddy routing |
+| `DOCKER_NETWORK` | *(empty)* | Docker network for Caddy routing (Docker only) |
 
 The `.env` file is gitignored — secrets never enter version control.
 
