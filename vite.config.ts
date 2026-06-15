@@ -27,14 +27,16 @@ export default defineConfig({
     outDir: 'build',
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Split vendor bundles for parallel loading + independent caching
-          'vendor-react': ['react', 'react-dom'],
-          'vendor-redux': ['@reduxjs/toolkit', 'react-redux'],
-          'vendor-router': ['react-router'],
-          'vendor-icons': ['@fortawesome/fontawesome-svg-core', '@fortawesome/free-solid-svg-icons', '@fortawesome/free-regular-svg-icons', '@fortawesome/free-brands-svg-icons', '@fortawesome/react-fontawesome'],
+        // Split vendor bundles for parallel loading + independent caching
+        manualChunks(id: string) {
+          if (id.includes('node_modules')) {
+            if (id.includes('/react-dom/') || id.includes('/react/')) return 'vendor-react';
+            if (id.includes('/@reduxjs/toolkit/') || id.includes('/react-redux/')) return 'vendor-redux';
+            if (id.includes('/react-router/')) return 'vendor-router';
+            if (id.includes('/@fortawesome/')) return 'vendor-icons';
+          }
         },
-      } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      },
     },
   },
 
