@@ -34,7 +34,7 @@ export default defineConfig({
           'vendor-router': ['react-router'],
           'vendor-icons': ['@fortawesome/fontawesome-svg-core', '@fortawesome/free-solid-svg-icons', '@fortawesome/free-regular-svg-icons', '@fortawesome/free-brands-svg-icons', '@fortawesome/react-fontawesome'],
         },
-      },
+      } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
     },
   },
 

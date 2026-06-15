@@ -15,5 +15,11 @@ dhiarlink-web-client.tar.gz
 /build
 /dist
 
+# screenshots
+screenshoot_*.png
+
+# old upstream assets
+shlink-web-client.gif
+
 npm-debug.log*
 public/servers.json*
