@@ -352,6 +352,69 @@ Read the backend's bare metal deployment guide (Caddyfile.bare-metal, nginx on p
 
 ---
 
+### Prompt 14 — Build Error Fix & Git History Cleanup
+
+**User:**
+
+> Got a little bit of error when building with node: [TS2769 on manualChunks in vite.config.ts]. Also, why does the github repo is so big? like the size of it when I'm pulling is roughly 50MB, is there any unwanted files or folders left behind in this repo that are not needed anymore?
+
+**Assistant Response:**
+
+1. **`vite.config.ts`** — Fixed TypeScript TS2769 error on `manualChunks`. The `defineConfig` from `vitest/config` has stricter types that don't accept `OutputOptions` from Rollup. Initial fix: `as any` cast on rollupOptions output
+2. **git-filter-repo** — Purged large files from all git history:
+   - `dhiarlink-web-client.tar.gz` (22MB)
+   - `shlink-web-client.gif` (~10MB across versions)
+   - `screenshoot_*.png` (580KB each)
+   - Reduced repo pack from 28.93MB → 18.74MB
+3. **`.gitignore`** — Added `screenshoot_*.png` and `shlink-web-client.gif` exclusions
+4. Removed screenshot PNGs from disk
+
+---
+
+### Prompt 15 — Rolldown Runtime Fix for manualChunks
+
+**User:**
+
+> It still shows an error. [TypeError: manualChunks is not a function from Rolldown at build time]
+
+**Assistant Response:**
+
+The `as any` TypeScript fix only silenced the compiler — Rolldown (Vite 8's bundler) rejects object-form `manualChunks` at **runtime**. Rewrote from object to function form:
+
+```typescript
+manualChunks(id: string) {
+  if (id.includes('node_modules')) {
+    if (id.includes('/react-dom/') || id.includes('/react/')) return 'vendor-react';
+    if (id.includes('/@reduxjs/toolkit/') || id.includes('/react-redux/')) return 'vendor-redux';
+    if (id.includes('/react-router/')) return 'vendor-router';
+    if (id.includes('/@fortawesome/')) return 'vendor-icons';
+  }
+}
+```
+
+**Key learning:** Vite 8 uses Rolldown (not Rollup). Rolldown only accepts `manualChunks` as a function, not an object. This is a breaking change from older Vite/Rollup.
+
+---
+
+### Prompt 16 — Bare Metal Deployment Post-Launch Debugging
+
+**User:**
+
+> Deployed the web client on bare metal successfully. Generated API key, added server to dashboard successfully. But can't create short URLs — "Something went wrong while loading short URLs". Also, cloudflared config mapped all three domains to localhost:3000, is that right?
+
+**Assistant Response:**
+
+Confirmed cloudflared config (all three domains → localhost:3000) is correct — Caddy routes by hostname. Diagnosed through multiple rounds:
+
+1. **Database not migrated** — `bin/cli db:migrate` fixed schema
+2. **App reads `config/params/*.php` not `.env`** — Created `config/params/prod.php` with all env vars (DB_DRIVER=maria, DEFAULT_DOMAIN=link.dhiarr.qzz.io, etc.)
+3. **OPcache preload slowing CLI** — Removed `opcache.preload` from CLI php.ini
+4. **RoadRunner pipeline `dhiarlink` → `shlink`** — Vendor code hardcodes `shlink`, renaming caused 500 on all redirects
+
+All issues are in the backend (`../dhiarlink`), not the web client itself. Web client was working correctly the whole time.
+
+---
+
 ## Design Decisions Log
 
 | Decision | Choice | Reason |
@@ -372,3 +435,5 @@ Read the backend's bare metal deployment guide (Caddyfile.bare-metal, nginx on p
 | Reverse proxy | Caddy (not Cloudflare Tunnel direct) | Routes host port 3000 → Caddy → containers internally |
 | Bare metal dashboard | nginx on port 8081 | Matches backend's Caddyfile.bare-metal routing `app.dhiarr.qzz.io → 127.0.0.1:8081` |
 | Build output directory | `build/` (not `dist/`) | Matches actual Vite output (`outDir: 'build'` in vite.config.ts) |
+| Vite 8 manualChunks | Function form, not object | Rolldown (Vite 8 bundler) only accepts function, rejects object at runtime |
+| Git history cleanup | `git-filter-repo` to purge large binaries | 50MB repo too large for GitHub; tar.gz and gif versions bloated history |

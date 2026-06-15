@@ -28,6 +28,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
     * Full bare metal deployment guide in `documentation/deployment.md` (Docker cleanup, Node.js build, nginx setup)
     * Updated `documentation/docs.md` with bare metal architecture and project structure
 
+### Fixed
+* Vite 8 / Rolldown build: `manualChunks` must be a **function**, not an object — Rolldown rejects object form with `TypeError: manualChunks is not a function`. Rewrote to function form checking `id.includes('node_modules/...')`
+* Large files purged from git history with `git-filter-repo`: `dhiarlink-web-client.tar.gz` (22MB), `shlink-web-client.gif` (~10MB across versions), `screenshoot_*.png` (580KB) — reduced repo pack from 28.93MB to 18.74MB
+* `.gitignore` — added `screenshoot_*.png` and `shlink-web-client.gif` exclusions
+
 ### Changed
 * Forked from `shlink-web-client` and rebranded to `dhiarlink-web-client`
 * `package.json` — name, description, repository URL updated to Dhiarlink
