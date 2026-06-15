@@ -413,6 +413,12 @@ Confirmed cloudflared config (all three domains → localhost:3000) is correct �
 
 All issues are in the backend (`../dhiarlink`), not the web client itself. Web client was working correctly the whole time.
 
+**Additional backend fixes discovered:**
+5. **Redis hostname `dhiarlink_redis` not resolving** — systemd `EnvironmentFile=/opt/dhiarlink/.env` loads Docker hostnames as real env vars, overriding `config/params/prod.php`. Fixed by updating `.env` to use `tcp://127.0.0.1:6379`
+6. **Config cache (`data/cache/app_config.php`)** must be deleted after env changes, with full stop → delete → start (not just restart)
+7. **Domain registration** — `bin/cli domain:redirects` registers a domain for redirects, but it only appears in `domain:list` after creating a short URL with it
+8. **Multi-domain short URL creation** — now works after all the above fixes
+
 ---
 
 ## Design Decisions Log
