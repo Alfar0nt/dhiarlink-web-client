@@ -4,11 +4,9 @@ A React-based Progressive Web App (PWA) dashboard for the [Dhiarlink](https://gi
 
 > Rebranded fork of [shlink-web-client](https://github.com/shlinkio/shlink-web-client), customized for the Dhiarlink platform.
 
-![Dhiarlink Dashboard](screenshoot_1.png)
+![Dhiarlink Dashboard](Screenshot_1.png)
 
-![Server Management](screenshoot_2.png)
-
-![URL Management](screenshoot_3.png)
+![URL Management](Screenshot_2.png)
 
 ---
 
